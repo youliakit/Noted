@@ -9,9 +9,9 @@ import SwiftUI
 
 @main
 struct NotedApp: App {
-    var body: some Scene {
-        WindowGroup {
-            Welcome()
-        }
-    }
+	var body: some Scene {
+		WindowGroup {
+			Welcome()
+		}
+	}
 }
