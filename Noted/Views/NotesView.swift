@@ -10,23 +10,60 @@ import SwiftUI
 
 struct NotesView: View {
 	@StateObject var viewModel = NotesViewModel()
-	
+
+	@State private var isPresenting: Bool = false
+	@State private var selectedNoteID: UUID?
+
 	var body: some View {
-		NavigationView {
-			List {
-				ForEach(viewModel.notes) { note in
-					// Each note gets a NavigationLink that points to the EditNoteView for that note. We can open the EditNoteView programmatically by setting the `editingNote` property of the view model to this note’s ID.
-					NavigationLink(
-						destination: EditNoteView(note: binding(for: note))
-					) {
-						Text(note.title)
+
+		let layout = [
+			GridItem(.flexible(minimum: 40)),
+			GridItem(.flexible(minimum: 40)) ]
+
+		NavigationStack {
+			ScrollView {
+				LazyVGrid(columns: layout) {
+					ForEach(viewModel.notes, id: \.id) { note in
+						ZStack(alignment: .topTrailing) {
+							ZStack {
+								RoundedRectangle(cornerRadius: 20, style: .continuous)
+									.fill(Color.white)
+									.frame(width: 200, height: 100)
+									.shadow(radius: 10)
+
+								Text(note.title == "" ? "Make a new note" : note.title)
+									.font(.custom("Lipstick Rage", size: 20))
+									.foregroundColor(.pink)
+									.opacity(0.5)
+							}
+							.onTapGesture {
+								selectedNoteID = note.id
+								isPresenting = true
+							}
+							Button {
+								viewModel.handleDelete(note)
+							} label: {
+								Image(systemName: "trash.fill") .foregroundColor(.red) .padding(6)
+							}
+						}
 					}
 				}
-				// The onDelete(perform:) modifier in SwiftUI enables the ability to delete a note from the list by swiping left on it and tapping “Delete”. The actual deletion is carried out by the handleDelete(_:) method from the NotesViewModel.
-				.onDelete(perform: viewModel.handleDelete(_:))
 			}
-			.navigationBarItems(trailing: Button(action: viewModel.createNote) {
-				Label("New Note", systemImage: "plus.circle.fill")
+			.sheet(isPresented: $isPresenting) {
+				if let id = selectedNoteID,
+				   let index = viewModel.notes.firstIndex(where: { $0.id == id }) {
+					EditNoteView(note: $viewModel.notes[index])
+				}
+			}
+			.navigationBarItems(trailing: Button {
+				let newNote = viewModel.createNote()
+				selectedNoteID = newNote.id
+				isPresenting = true
+			} label: {
+				Image("new")
+					.resizable()
+					.scaledToFit()
+					.frame(width: 36, height: 36)
 			})
 			.navigationTitle("My Notes")
 		}
@@ -35,19 +72,11 @@ struct NotesView: View {
 		.onAppear {
 			try! viewModel.load()
 		}
-		
+
 		// run the provided closure whenever 'notes' variable's value is changed
 		.onChange(of: viewModel.notes) {
 			try? viewModel.save()
 		}
-	}
-	
-	/// Returns the given note as a binding. This is required because the `EditNoteView` requires a binding so that the note can be edited, and the SwiftUI `ForEach` element doesn’t provide a binding.
-	private func binding(for note: Note) -> Binding<Note> {
-		guard let index = viewModel.notes.firstIndex(of: note) else {
-			fatalError("Failed to find note: \(note)")
-		}
-		return $viewModel.notes[index]
 	}
 }
 

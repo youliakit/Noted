@@ -10,20 +10,15 @@ import Foundation
 import SwiftUI
 internal import UniformTypeIdentifiers
 
+
+// Class lets us to have a single, observable instance
 class NotesViewModel: ObservableObject {
 
-	@Published var notes: [Note] = []
-	@Published var editingNote: Note.ID?
+	// Published lets us to automatically react on changes
+	@Published var notes: [Note] = []    // our notes
 
-	// Find url for our document's folder
 	private var documentDirectory: URL {
-		try! FileManager.default
-			.url(
-				for: .documentDirectory,
-				in: .userDomainMask,
-				appropriateFor: nil,
-				create: true
-			)
+		try! FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
 	}
 
 	/// Append file name and extension to our documentDirectory URL
@@ -34,19 +29,16 @@ class NotesViewModel: ObservableObject {
 			.appendingPathExtension(for: .json)
 	}
 
-	/// Creates a new note, then updates the navigation state so that the `EditNoteView` is displayed for the new note.
-	func createNote() {
-		let note = Note(id: UUID(), title: "New Note", content: "")
-		notes.append(note)
 
-		// Update state to show the EditNoteView for the new note
-		editingNote = note.id
+	/// Creates a new note
+	func createNote() -> Note {
+		let note = Note(id: UUID(), title: "", content: "")
+		notes.append(note)
+		return note
 	}
 
-	/// Deletes one or more notes. This is used to enable SwiftUI’s built-in delete functionality.
-	/// - Parameter indexSet: Indices in the `notes` array for the notes being removed.
-	func handleDelete(_ indexSet: IndexSet) {
-		notes.remove(atOffsets: indexSet)
+	func handleDelete(_ note: Note) {
+		notes.removeAll { $0.id == note.id }
 	}
 
 	// MARK: - Persistence

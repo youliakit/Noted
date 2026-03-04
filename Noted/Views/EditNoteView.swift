@@ -19,7 +19,7 @@ struct EditNoteView: View {
 				TextEditor(text: $note.content)
 			}
 		}
-		.navigationTitle("Edit “\(note.title)”")
+		.navigationTitle("Edit")
 	}
 }
 

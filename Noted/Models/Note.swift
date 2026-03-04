@@ -8,7 +8,7 @@
 import Foundation
 
 struct Note: Codable, Hashable, Identifiable {
-	let id: UUID
+	let id: UUID // each note has a unique ID
 	var title: String
 	var content: String
 }
